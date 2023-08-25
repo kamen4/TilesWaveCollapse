@@ -10,11 +10,10 @@ namespace TilesWaveCollapse.Generator;
 public class WfcGenerator
 {
     public Tile?[,] Tilemap { get; private set; }
-    public int TilesCount => tiles.Count;
-    public Action<int, int> TileSetted = (x, y) => { };
+    public Action<int, int> TileSetted { get; set; } = (x, y) => { };
 
+    public List<Tile> Tiles { get; private set; }
     private readonly HashSet<int>[,] wave;
-    private readonly List<Tile> tiles;
     private readonly int w, h;
     private readonly Random rnd;
 
@@ -22,7 +21,7 @@ public class WfcGenerator
     {
         w = _width;
         h = _height;
-        tiles = new();
+        Tiles = new();
         rnd = new();
         Tilemap = new Tile[h, w];
         wave = new HashSet<int>[h, w];
@@ -35,7 +34,7 @@ public class WfcGenerator
             {
                 Tilemap[i, j] = null;
                 wave[i, j] = new();
-                for (int k = 0; k < tiles.Count; k++)
+                for (int k = 0; k < Tiles.Count; k++)
                     wave[i, j].Add(k);
             }
     }
@@ -43,16 +42,16 @@ public class WfcGenerator
     public void AddTile(Tile _tile, bool _includeRotation = true)
     {
         if (_includeRotation)
-            tiles.AddRange(_tile.GetAllRotations());
+            Tiles.AddRange(_tile.GetAllRotations());
         else
-            tiles.Add(_tile);
+            Tiles.Add(_tile);
     }
-    private void SetTile(int x, int y, int tile)
+    private void SetTile(int x, int y, int? tile = null)
     {
+        Tilemap[x, y] = Tiles[tile ?? wave[x, y].First()];
         wave[x, y].Clear();
-        Tilemap[x, y] = tiles[tile];
-        CountEntropy(x, y, new());
         TileSetted(x, y);
+        CountEntropy(x, y);
     }
     public void Generate()
     {
@@ -80,10 +79,9 @@ public class WfcGenerator
         return exist;
     }
 
-    void CountEntropy(int x, int y, Dictionary<int, HashSet<int>> map)
+    void CountEntropy(int x, int y, Dictionary<int, HashSet<int>>? map = null)
     {
-        if (Tilemap[x, y] is null)
-            return;
+        map ??= new();
         if (map.ContainsKey(x))
         {
             if (map[x].Contains(y))
@@ -93,34 +91,30 @@ public class WfcGenerator
         else
             map[x] = new() { y };
 
-        if (x > 0 && wave[x - 1, y].Count > 1 &&
-            wave[x - 1, y].RemoveWhere(t => wave[x, y].All(fr => !tiles[t].CanConnectTo(tiles[fr], Side.Bottom))) != 0)
-        {
-            if (wave[x - 1, y].Count == 0)
-                Seted(x - 1, y);
-            CountEntropy(x - 1, y, map);
-        }
-        if (y > 0 && wave[x, y - 1].Count > 1 &&
-            wave[x, y - 1].RemoveWhere(t => wave[x, y].All(fr => !tiles[t].CanConnectTo(tiles[fr], Side.Right))) != 0)
-        {
-            if (wave[x, y - 1].Count == 0)
-                Seted(x, y - 1);
-            CountEntropy(x, y - 1, map);
-        }
-        if (x < h - 1 && wave[x + 1, y].Count > 1 &&
-            wave[x + 1, y].RemoveWhere(t => wave[x, y].All(fr => !tiles[t].CanConnectTo(tiles[fr], Side.Top))) != 0)
-        {
-            if (wave[x + 1, y].Count == 0)
-                Seted(x + 1, y);
-            CountEntropy(x + 1, y, map);
-        }
-        if (y < w - 1 && wave[x, y + 1].Count > 1 &&
-            wave[x, y + 1].RemoveWhere(t => wave[x, y].All(fr => !tiles[t].CanConnectTo(tiles[fr], Side.Left))) != 0)
-        {
-            if (wave[x, y + 1].Count == 0)
-                Seted(x, y + 1);
-            CountEntropy(x, y + 1, map);
-        }
+        if (x > 0 && Tilemap[x - 1, y] is null &&
+            wave[x - 1, y].RemoveWhere(t => wave[x, y].All(fr => !Tiles[t].CanConnectTo(Tiles[fr], Side.Bottom))) != 0)
+            if (wave[x - 1, y].Count == 1)
+                SetTile(x - 1, y);
+            else
+                CountEntropy(x - 1, y, map);
+        if (y > 0 && Tilemap[x, y - 1] is null &&
+            wave[x, y - 1].RemoveWhere(t => wave[x, y].All(fr => !Tiles[t].CanConnectTo(Tiles[fr], Side.Right))) != 0)
+            if (wave[x, y - 1].Count == 1)
+                SetTile(x, y - 1);
+            else
+                CountEntropy(x, y - 1, map);
+        if (x < h - 1 && Tilemap[x + 1, y] is null &&
+            wave[x + 1, y].RemoveWhere(t => wave[x, y].All(fr => !Tiles[t].CanConnectTo(Tiles[fr], Side.Top))) != 0)
+            if (wave[x + 1, y].Count == 1)
+                SetTile(x + 1, y);
+            else
+                CountEntropy(x + 1, y, map);
+        if (y < w - 1 && Tilemap[x, y + 1] is null &&
+            wave[x, y + 1].RemoveWhere(t => wave[x, y].All(fr => !Tiles[t].CanConnectTo(Tiles[fr], Side.Left))) != 0)
+            if (wave[x, y + 1].Count == 1)
+                SetTile(x, y + 1);
+            else
+                CountEntropy(x, y + 1, map);
 
         map[x].Remove(y);
     }
