@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             pictureBox1 = new PictureBox();
             button1 = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -44,11 +45,11 @@
             // 
             // button1
             // 
-            button1.Location = new Point(9, 4);
+            button1.Location = new Point(60, 0);
             button1.Name = "button1";
             button1.Size = new Size(75, 23);
             button1.TabIndex = 1;
-            button1.Text = "button1";
+            button1.Text = "GENERATE";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
@@ -59,9 +60,10 @@
             ClientSize = new Size(661, 342);
             Controls.Add(button1);
             Controls.Add(pictureBox1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "Form1";
             StartPosition = FormStartPosition.WindowsDefaultBounds;
-            Text = "Form1";
+            Text = "BEST TILE WAVE FUNCTION COLLAPSE GENERATOR AND PATH FINDER YOU HAVE EVER SEEN";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
